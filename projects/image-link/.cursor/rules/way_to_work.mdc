@@ -4,7 +4,7 @@ alwaysApply: true
 
 # Onboarding
 - **Project:** ImageLink: Smart Image Management and Tagging Platform for CV.
-- **Stack:** Python (FastAPI/Flask), ReactJS (Vite), SQLite/PostgreSQL.
+- **Stack:** Python (FastAPI/Flask), ReactJS (Vite), SQLite using supabase.
 - **Package Manager:** `uv` (Python), `npm` (Frontend).
 - **Structure:**
   - `/frontend`: Client application (ReactJS).
