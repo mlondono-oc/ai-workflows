@@ -1,5 +1,5 @@
 # REVIEW PROTOCOL: PRE-COMMIT CHECKLIST
-> **Task Reference:** [01-planning/image-link_brief.mdc]
+> **Task Reference:** [docs/image-link_brief.mdc]
 > **Scope:** Detecting AI hallucinations and logic errors before repository integration for the ImageLink MVP.
 
 ---

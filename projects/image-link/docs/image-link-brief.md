@@ -33,8 +33,8 @@
 * **File System Handler:** A dedicated service to manage safe local file movement (reorganization).
 
 ### Input Structure
-* **Local Paths:** System directory paths to load image batches.
-* **User Metadata:** Free-text labels and review status (e.g., "Reviewed", "To Check").
+* **Local Paths:** System directory paths to load image batches. Supports JPG and PNG formats. Image directories are expected as a root folder that may contain subfolders, and all images within this hierarchy will be processed.
+* **User Metadata:** Free-text labels and review status (e.g., “Reviewed”, “To Check”). When loading the dataset, the user defines a list of tags/labels (one or more words separated by underscores), and keyboard shortcuts are assigned to each tag to streamline image labeling.
 * **Target Schema:** Definition of sub-directories for reorganization (e.g., /train, /test, /val).
 
 ### Output Structure
@@ -43,18 +43,34 @@
 * **Export File:** .csv or .json format linking image paths, labels, and cluster IDs.
 
 ### Integrations
-* Integration with pre-trained Computer Vision models (such as ResNet or EfficientNet without the final classifier) for feature extraction and vector generation.
+* Integration with pre-trained Computer Vision models (such as ResNet or EfficientNet without the final classifier) for feature extraction and vector generation. A ResNet50 model pre-trained on ImageNet will be used to generate embeddings.
 * Supabase Client: For real-time metadata updates and vector similarity queries.
+
+### Background Processing
+> Goal: Clearly define the strategy for handling long-running, computationally intensive tasks.
+
+* Strategy: Heavy computational tasks (vectorization, clustering, file movement) should run asynchronously in the backend and must not block the user interface.
+* Implementation Suggestion (for MVP): For the MVP, these tasks can be managed using a lightweight task queue system (e.g., Celery with Redis as the broker) or a simpler approach based on threading.Thread or multiprocessing.Process, with basic backend status monitoring if infrastructure allows. Providing task status feedback to the user (e.g., “Processing images...”, “Clustering completed”) is essential.
+
 ---
 
 ## 3. CONSTRAINTS
 > Indicate the mandatory rules, guardrails, and standards to follow during the project's development.
 
 ### Architectural Standards
-* Logic Decoupling: Business logic must remain independent of Supabase implementation details.
-* I/O Safety: Directory reorganization must implement "dry-run" or validation logic to prevent data loss during file movement.
-* Modular Design: Clustering logic should be interchangeable (e.g., switching between K-Means or DBSCAN).
-* On-Demand Processing: Heavy computational tasks (clustering, vectorization, file movement) must only execute upon explicit user request.
+* **Logic Decoupling:** Business logic must remain independent of Supabase implementation details.
+* **I/O Safety:** Directory reorganization must implement "dry-run" or validation logic to prevent data loss during file movement.
+* **Modular Design:** Clustering logic should be interchangeable (e.g., switching between K-Means or DBSCAN).
+* **On-Demand Processing:** Heavy computational tasks (clustering, vectorization, file movement) must only execute upon explicit user request.
+* **Frontend Performance:** The grid view UI must efficiently render and filter at least 5,000 images without significant performance degradation.
+* **Local File System Security:** The File System Handler must operate within a sandbox or with strictly limited permissions to user-specified directories for loading and reorganizing files, preventing unauthorized access to other parts of the host file system.
+* **ML Parameter Configurability:** Key parameters for vectorization (e.g., CV model) and clustering (e.g., number of clusters, algorithm) must be configurable via the UI or configuration files, enabling experimentation without code changes.
+* **CV Model Versioning Strategy:** Computer Vision models used for feature extraction must be versioned and loaded in a controlled manner to ensure reproducibility of embeddings and clustering results.
+* **Auditability of Critical Actions:** All critical operations, such as file reorganization or bulk label deletion, must be logged and auditable, including at least a timestamp and the action performed.
+* **Operation Idempotency:** Processing (vectorization, clustering) and file reorganization operations must be idempotent, ensuring that repeated executions with the same parameters produce the same results without unintended side effects.
+* **Image Storage:** The platform will only handle references to local image paths. This implies that image integrity depends on users not moving or deleting the original files outside the platform. At this stage, the platform will not store image copies or thumbnails in Supabase Storage.
+
+
 
 ### Development Rules
 * **Best Practices:** Follow the idiomatic conventions and best practices of the chosen language or framework.
@@ -63,6 +79,7 @@
 * **Tests:** Mandatory inclusion of automated tests for all core logic.
 * **Library Limits:** Restrict external dependencies to those explicitly approved or listed in the technical requirements.
 * **Scope Limits:** Strictly forbidden to implement user authentication, multi-project management, or advanced bounding-box annotation in this MVP phase.
+* **Resource Usage Limits (MVP):** For the MVP, the platform is designed to run on a single server instance (backend) and will not be optimized for large-scale horizontal scalability at this stage.
 
 ---
 
@@ -76,5 +93,6 @@
 * [ ] **Similarity Search:** Selecting an image identifies the "N" most similar items via vector distance upon user command.
 * [ ] **Data Export:** SSuccessful generation of a manifest file containing paths, labels, and other relevant information upon user command.
 * [ ] **Quality Assurance:** Code passes Ruff/Black linting and mypy strict type checking.
+* [ ] **Error Handling and Feedback:** The platform provides clear user feedback on operation status and errors, both in the UI and through logs.
 
 ---
