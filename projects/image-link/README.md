@@ -68,3 +68,10 @@ npm test
 - Frontend: `vitest` + `@testing-library/react` en `frontend/src/*.test.tsx`.
 - Cada nuevo comportamiento debe agregar primero un test en estado RED.
 - Luego se implementa el minimo codigo para pasar a GREEN.
+
+## Base de datos (Supabase)
+
+- Migraciones SQL en `supabase/migrations/`.
+- Aplicar localmente: `supabase migration up` (desde la raiz del proyecto, carpeta con `supabase/`).
+- Reset local (migraciones + `supabase/seed.sql`): `supabase db reset`.
+- Validacion manual del esquema: ejecutar `supabase/tests/schema_validation.sql` contra Postgres local (por ejemplo con `psql` o `docker exec` al contenedor `supabase_db_image-link`).

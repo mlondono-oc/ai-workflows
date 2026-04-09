@@ -25,10 +25,11 @@ Apply automatically when the user requests:
 1. **Create an empty migration file**
 
    ```bash
-   supabase migration new migration_name
+   supabase --yes migration new migration_name
    ```
 
    Replace `migration_name` with a short, descriptive name (e.g. `add_images_table`). The CLI creates a timestamped file under `supabase/migrations/`.
+   Use `--yes` to force non-interactive mode and prevent hangs in automated/agent runs.
 
 2. **Edit the migration**
 
@@ -62,7 +63,7 @@ Apply automatically when the user requests:
 
 | Goal              | Command |
 |-------------------|---------|
-| New migration     | `supabase migration new <name>` |
+| New migration     | `supabase --yes migration new <name>` |
 | Apply migrations  | `supabase migration up` |
 | Reset local DB    | `supabase db reset` |
 
@@ -70,6 +71,6 @@ Optional: `supabase migration list` to inspect local vs applied migrations; `sup
 
 ## Quick Checklist
 
-- [ ] Create migration with `supabase migration new migration_name`
+- [ ] Create migration with `supabase --yes migration new migration_name`
 - [ ] Write SQL to the created file
 - [ ] Run `supabase migration up`
