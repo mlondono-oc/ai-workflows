@@ -15,29 +15,27 @@ alwaysApply: true
 - **Setup (Backend):** `uv sync`
 - **Setup (Frontend):** `npm install`
 - **Dev (Backend):** `uvicorn backend.main:app --reload` (If using FastAPI) or `flask run` (If using Flask).
-- **Dev (Frontend):** `npm run dev`
+- **Dev (Frontend):** `npm run dev` 
 - **Test (Backend):** `pytest`
 - **Test (Frontend):** `npm test`
-- **DB (Migrations):** `alembic upgrade head` (If using SQLAlchemy/Alembic).
-- **Generate Embeddings:** `uv run python backend/scripts/generate_embeddings.py <path_to_images_directory>`
+- **DB:** `npm run supabase:gen` (Generate types after migration)
 
 # Agent Rules
-1.  **Tool & Skill Discovery:** Before planning, review your available tools and Skills (e.g., `image_generation`, `research`, `read_text_file`, `web_fetch`). If a specific Skill exists for the task (e.g., generate embeddings, process images), use it preferentially to ensure consistency.
-2.  **Delegated Verification:** ALWAYS delegate the validation of any change, feature, or bug fix to the `qa-engineer` sub-agent.
-3.  **Style:** If the linter fails (Python: Black/Flake8; JS: ESLint/Prettier), fix it. Do not invent style rules; follow the existing configuration.
+1.  **Tool & Skill Discovery:** Before planning, review your available tools and Skills availables. If a specific Skill exists for the task (e.g. generate migrations, refactor), use it preferentially to ensure consistency.
+2.  **Delegated Verification:** Create reproducibility tests before attempting to fix complex bugs.
+3.  **Style:** If the linter fails, fix the code. Do not invent style rules; follow the existing project configuration.
 
 # Implementation Flow
 The mandatory work flow for any implementation must be:
-1.  **Design and Clarify Use Cases**: First, understand the scenario to have clear acceptance criteria for the MVP (see "Minimum Viable Product - ImageLink" document).
-2.  **Plan the Implementation**: Create the technical design (code structure, API endpoints, data models) to meet those use cases.
-3.  **Implement**: With a clear understanding of the use cases and the technical plan, proceed with the implementation.
-4.  **Verify**: Invoke the `qa-engineer` sub-agent (e.g., "Use the qa-engineer sub-agent to verify these test cases: 1. ..., 2. ...") explicitly providing the specific test cases that apply to the implemented feature. Avoid asking to test unnecessary things or full flows if they don't apply. WAITS for their detailed report before considering the task complete.
+1.  **Design and Clarify Use Cases**: Understand the scenario to establish clear acceptance criteria.
+2.  **Plan the Implementation**: Create the technical design (code structure, API endpoints, data models) to satisfy the use cases.
+3.  **Implement**: Proceed with implementation only after the use cases and technical plan are clearly defined.
+4.  **Verify**: Run the unit tests designed under the TDD methodology.
 
 # Implementation Principles
-1.  **DRY:** Don't repeat code; abstract reusable logic, especially in the backend (e.g., functions for file handling, DB access, embedding calculation).
-2.  **Simplicity First:** Avoid over-engineering. For the MVP, prioritize functionality over extreme optimization or scalability for millions of images. The simplest solution that meets the MVP criteria is usually the correct one.
-3.  **Delegated Testing:** Focus on implementation and defining use cases. The execution of unit, integration, and UI tests is the exclusive responsibility of the `qa-engineer` sub-agent.
+1.  **DRY:** Avoid code duplication. Abstract reusable logic, especially in the backend.
+2.  **Simplicity First:** Avoid over-engineering. For the MVP, prioritize functionality over extreme optimization or scalability. The simplest solution that meets the MVP criteria is usually the correct one.
+3.  **Pragmatic TDD:** Focus on writing tests and defining use case scenarios before starting the implementation.
 
 # Debugging
-
-When a bug is reported, do not immediately try to fix it. Analyze the root cause, plan the solution, and then implement it. Once the fix is applied, immediately delegate verification to the `qa-engineer` sub-agent to confirm the bug's resolution and deliver the QA report.
+When a bug is reported, do not attempt an immediate fix. Instead, create a test that reproduces the bug, then proceed with the fix.
