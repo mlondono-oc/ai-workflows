@@ -9,47 +9,79 @@ description: Read-only inspection of the ImageLink database via the Supabase MCP
 
 # Inspecting the Database — ImageLink
 
+## Purpose
+
+Use this skill to understand the current state of the database with the Supabase MCP without modifying data or the schema.
+
+This procedure is **read-only** and is used for:
+
+- debugging
+- extracting information
+- clarifying the current schema
+
 ## Non-negotiable rules
 
-1. **Do not modify the database through MCP.** No DDL or DML that changes persisted state.
-2. **Never call `apply_migration` on the MCP** for this workflow. Migrations are created and applied with the Supabase CLI (`supabase migration new`, `supabase migration up`). Follow the **modifying-database** skill for schema changes.
-3. **`execute_sql` is read-only here.** Use only queries that inspect data or metadata: `SELECT`, `EXPLAIN`, `SHOW`, and catalog queries (`information_schema`, `pg_catalog`, etc.). Do **not** run `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `CREATE`, `ALTER`, `DROP`, `GRANT`, or other mutating statements—even for “quick fixes.”
+1. Treat all MCP interactions as read-only.
+2. **Do not** use MCP to modify the database.
+3. **Do not** execute `apply_migration` from MCP.
+4. If schema or data changes are required, use the project's CLI migrations:
+  - `supabase migration new migration_name`
+  - edit migration SQL
+  - `supabase migration up`
+  - if corruption occurs: `supabase db reset`
 
 If the user asks to change the schema or data, redirect to migrations and the modifying-database skill.
 
-## MCP server
+## MCP to be used for inspection
 
-Use the enabled Supabase local database MCP (e.g. server identifier `project-0-image-link-local-database`, display name `local-database`). Before calling a tool, read its JSON schema under `.cursor/.../mcps/<server>/tools/<tool>.json` so arguments match exactly (e.g. `list_tables` requires `schemas` and `verbose`).
+MCP Server: project-0-image-link-local-database
 
-## Tools and when to use them
+Use the enabled Supabase local database MCP. Before calling a tool, read its JSON schema under `.cursor/.../mcps/<server>/tools/<tool>.json` so arguments match exactly (e.g. `list_tables` requires `schemas` and `verbose`).
 
-| Tool | Role in this workflow |
-|------|------------------------|
-| `list_tables` | Overview of tables; set `verbose: true` for columns, PKs, and FKs. Default schema list often includes `public`. |
-| `list_extensions` | See installed Postgres extensions. |
-| `list_migrations` | See which migrations are recorded (useful vs local files / debugging). |
-| `execute_sql` | **Read-only** introspection and debugging queries only (see rules above). |
-| `get_advisors` | Security or performance advisories (`type`: `security` or `performance`); useful after schema discussions. Include remediation links for the user. |
-| `get_logs` | Recent logs by `service` (`api`, `postgres`, `auth`, `storage`, `realtime`, `edge-function`, `branch-action`). |
-| `search_docs` | Supabase documentation search via GraphQL (`graphql_query`). Prefer checking docs when behavior is unclear. |
-| `get_project_url` | API URL for the linked project (context / debugging). |
-| `get_publishable_keys` | Publishable keys (treat as sensitive; use only when needed for local debugging). |
-| `generate_typescript_types` | Optional: generated types from the schema for frontend typing—does not replace migrations. |
+Recommended tools for reading:
 
-## Forbidden for this skill
+- `list_tables`: List tables by schema
+- `list_migrations`: Review the status of applied migrations
+- `list_extensions`: Inspect enabled extensions
+- `get_logs`: Diagnose problems by service (`postgres`, `api`, `auth`, etc.)
+- `get_advisors`: Review security/performance recommendations
+- `execute_sql`: Only for `SELECT` or other read queries
 
-| Tool | Reason |
-|------|--------|
-| `apply_migration` | Mutates the database outside the repo migration workflow. Use CLI migrations instead. |
+Forbidden for this skill
+- `apply_migration`: (prohibited by read-only policy)
 
 ## Suggested workflow
 
-1. **Shape of the schema:** `list_tables` with `verbose: true` on relevant schemas (often `public`).
-2. **Deeper detail:** `execute_sql` with targeted `SELECT` or catalog queries (e.g. columns, constraints, views, policies if exposed).
-3. **Migration vs reality:** compare `list_migrations` with `supabase/migrations/` when diagnosing drift.
-4. **Issues / performance / security:** `get_advisors`, optionally `get_logs` for `postgres` or `api`.
-5. **Supabase-specific behavior:** `search_docs` with an appropriate GraphQL query.
+1. Define the inspection question (schema, data, performance or error).
+2. Start with metadata:
+  - `list_tables`
+  - `list_migrations`
+  - `list_extensions`
+3. If more detail is needed, use `execute_sql` with read queries (`SELECT`).
+4. If the problem is operational, supplement with:
+  - `get_logs`
+  - `get_advisors`
+5. Report findings and, if changes are needed, escalate to the CLI migrations workflow.
 
-## Relationship to other skills
+## Restrictions for execute_sql
 
-- **modifying-database:** Any persistent schema or data change goes through new migration files and `supabase migration up`, not through MCP `apply_migration` or mutating SQL.
+Allowed:
+
+- `SELECT ...`
+- Catalog queries (`information_schema`, `pg_catalog`)
+- `EXPLAIN` on read queries
+
+Not allowed:
+
+- `INSERT`, `UPDATE`, `DELETE`
+- `CREATE`, `ALTER`, `DROP`, `TRUNCATE`
+- `GRANT`, `REVOKE`, `COMMENT`
+- Any SQL with side effects
+
+## Quick Checklist
+
+- [ ] Confirm that the objective is inspection/debugging
+- [ ] Use only MCP read tools
+- [ ] If using `execute_sql`, validate that it is read-only
+- [ ] Do not use `apply_migration` via MCP
+- [ ] If a database needs to be changed, move to CLI migrations
