@@ -1,15 +1,16 @@
 import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import App from "./App";
 
 describe("App", () => {
-  it("muestra el titulo de ImageLink", () => {
-    render(<App />);
-    expect(screen.getByRole("heading", { name: /imagelink/i })).toBeInTheDocument();
+  beforeEach(() => {
+    localStorage.clear();
   });
 
-  it("muestra un texto de estado inicial", () => {
+  it("redirige a login cuando no hay sesión", () => {
     render(<App />);
-    expect(screen.getByText(/frontend inicial listo/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /imagelink/i })).toBeInTheDocument();
+    expect(screen.getByText(/inicia sesión/i)).toBeInTheDocument();
   });
 });

@@ -29,6 +29,15 @@ cd backend
 uv sync
 ```
 
+Variables de entorno (Supabase): copia el ejemplo dentro de `backend/` y edita si usas otro proyecto o URL.
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Se carga siempre `backend/.env` (ruta fija respecto al paquete). Si el archivo no existe, se usan los valores por defecto del Supabase local del CLI.
+
 Ejecutar API:
 
 ```bash

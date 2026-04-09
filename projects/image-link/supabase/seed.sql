@@ -1,0 +1,2 @@
+-- Optional local seed data for ImageLink.
+-- Add INSERT statements here after you have test users in auth.users.

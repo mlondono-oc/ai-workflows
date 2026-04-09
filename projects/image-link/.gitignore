@@ -1,5 +1,8 @@
 .DS_Store
 
+# Backend secrets
+backend/.env
+
 # Python
 __pycache__/
 .pytest_cache/
