@@ -1,12 +1,13 @@
 # 10Xbuilder Agents
 
-Agent with LangChain and TypeScript (ESM) that uses tools to solve calculations and return the current time.
+Agent with LangChain and TypeScript (ESM) that uses tools to solve calculations, return the current time, and search for flight prices.
 
 ## Requirements
 
 - Node.js 20+
 - npm 10+
 - OpenRouter API key
+- SerpAPI API key (for flight search)
 
 ## Installation
 
@@ -25,7 +26,10 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENROUTER_TEMPERATURE=0
 OPENROUTER_HTTP_REFERER=https://your-app-domain.com
 OPENROUTER_APP_TITLE=10Xbuilder Agents
+SERPAPI_API_KEY=your_serpapi_api_key
 ```
+
+Get your SerpAPI key at [serpapi.com](https://serpapi.com).
 
 ## Run in development
 
@@ -38,6 +42,18 @@ With a custom question:
 ```bash
 npm run dev -- "What is 25% of 240 and what time is it now?"
 ```
+
+Flight search examples:
+
+```bash
+npm run dev -- "¿Cuánto cuesta un vuelo a Japón con un presupuesto de 2000 dólares?"
+npm run dev -- "Busca vuelos a Tokio desde Bogotá para la próxima semana"
+npm run dev -- "¿Hay vuelos a NRT desde MED en dos semanas dentro de 1500 USD?"
+```
+
+> If no departure city is specified, the agent defaults to **Medellín (MED)**.
+> If no budget is specified, it defaults to **USD 2000**.
+> Relative dates ("next week", "in two weeks") are automatically converted to concrete dates.
 
 ## Scripts
 
@@ -56,7 +72,7 @@ The project is organized in layers so each concern stays isolated and easy to ev
 - **Interface layer**: `src/index.ts` provides a CLI entry point and sends user input to the agent runtime.
 - **Application layer**: `src/agent/runAgent.ts` exposes a single execution function and supports dependency injection for testing.
 - **Composition layer**: `src/agent/createAgent.ts` assembles model, prompt, and tools into an `AgentExecutor`.
-- **Domain capabilities**: `src/agent/tools/*` defines reusable tools such as `calculator` and `current_time`.
+- **Domain capabilities**: `src/agent/tools/*` defines reusable tools such as `calculator`, `current_time`, and `flight_search`.
 - **Configuration layer**: `src/config/env.ts` loads and validates environment variables with `zod`.
 
 For a deeper architectural breakdown, see `docs/architecture.md`.
