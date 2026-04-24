@@ -11,7 +11,7 @@ This project implements a code discovery agent with LangChain tools using a modu
    - `code_analyzer` — reads a file or directory, extracts component responsibilities, dependencies, and key patterns; operates in read-only mode.
    - `diagram_generator` — receives the structured output from `code_analyzer` and produces an Excalidraw-compatible JSON diagram with labeled nodes and relationships.
    - `flow_explainer` — traces the execution path of a specific function, listing call order, conditionals, and data transformations step by step.
-5. `AgentExecutor` returns a structured `output` with four sections: summary, analyzed scope, execution flow, and diagram.
+5. `AgentExecutor` returns a structured `output` with five sections: summary, analyzed scope, execution flow, diagram, and a brief explanation of how the answer was produced.
 
 ## Module responsibilities
 
@@ -45,10 +45,11 @@ This project implements a code discovery agent with LangChain tools using a modu
 Every response produced by the agent must follow this minimum structure:
 
 ```
-1. Resumen        — brief description of what was analyzed and the main finding.
-2. Alcance        — what was included and explicitly what was not evaluated.
-3. Flujo          — ordered steps of the execution path or component relationships.
-4. Diagrama       — Excalidraw JSON or a link to the exported diagram file.
+1. Resumen                      — brief description of what was analyzed and the main finding.
+2. Alcance                      — what was included and explicitly what was not evaluated.
+3. Flujo                        — ordered steps of the execution path or component relationships.
+4. Diagrama                     — Excalidraw JSON or a link to the exported diagram file.
+5. Como llegue a esta conclusion — short explanation of which tools were used and why.
 ```
 
 If the agent cannot fully satisfy the request (e.g. too large a codebase), it must reduce scope, communicate the limitation in the `Alcance` section, and deliver a partial but valid result.
@@ -61,6 +62,7 @@ If the agent cannot fully satisfy the request (e.g. too large a codebase), it mu
 - All file system access is strictly read-only during the MVP; the agent must never write, move, or delete files in the analyzed repository.
 - `code_analyzer` output is the single source of truth shared between `diagram_generator` and `flow_explainer` to avoid redundant file reads.
 - Injectable executor support in `runAgent` for isolated and fast unit tests.
+- Guardrails are enforced in code: `validateInput` runs before agent execution and `validatePath` restricts tool access to `AGENT_REPO_ROOT`.
 - Responses are always in Spanish, regardless of the language of the analyzed code.
 
 ## Recommended evolution
