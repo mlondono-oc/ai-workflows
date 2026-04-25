@@ -43,7 +43,7 @@ describe("getEnv", () => {
 
     expect(env.OPENROUTER_MODEL).toBe("openai/gpt-4o-mini");
     expect(env.AGENT_MAX_INPUT_LENGTH).toBe(2000);
-    expect(env.AGENT_MAX_ITERATIONS).toBe(5);
+    expect(env.AGENT_MAX_ITERATIONS).toBe(12);
     expect(env.AGENT_VERBOSE).toBe(false);
     expect(env.AGENT_ENABLE_INPUT_FILTER).toBe(true);
   });

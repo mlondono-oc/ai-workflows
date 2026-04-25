@@ -4,9 +4,10 @@ import { createModel } from "./model.js";
 import { agentPrompt } from "./prompt.js";
 import { codeAnalyzerTool } from "./tools/codeAnalyzer.js";
 import { diagramGeneratorTool } from "./tools/diagramGenerator.js";
+import { fileReaderTool } from "./tools/fileReader.js";
 import { flowExplainerTool } from "./tools/flowExplainer.js";
 
-export const agentTools = [codeAnalyzerTool, diagramGeneratorTool, flowExplainerTool];
+export const agentTools = [codeAnalyzerTool, fileReaderTool, flowExplainerTool, diagramGeneratorTool];
 
 export interface BuildAgentExecutorOptions {
   verbose?: boolean;

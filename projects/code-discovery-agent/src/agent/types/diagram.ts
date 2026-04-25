@@ -23,6 +23,7 @@ export interface ExcalidrawElement {
   updated: number;
   link: null;
   locked: boolean;
+  [key: string]: unknown;
 }
 
 export interface ExcalidrawDiagram {

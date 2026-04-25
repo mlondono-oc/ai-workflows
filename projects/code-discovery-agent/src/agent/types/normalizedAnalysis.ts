@@ -1,3 +1,9 @@
+export interface DocumentationFile {
+  path: string;
+  content: string;
+  truncated: boolean;
+}
+
 export interface NormalizedSymbol {
   name: string;
   kind: "function" | "class" | "interface" | "type" | "const" | "variable" | "unknown";
@@ -27,6 +33,7 @@ export interface AnalysisMetadata {
 
 export interface NormalizedAnalysis {
   metadata: AnalysisMetadata;
+  documentation: DocumentationFile[];
   files: AnalyzedFile[];
   stats: {
     totalFiles: number;

@@ -11,6 +11,24 @@ export interface RunAgentOptions {
   verbose?: boolean;
 }
 
+function isModelAuthError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return /MODEL_AUTHENTICATION|401\s+User not found|401/i.test(error.message);
+}
+
+function mapModelAuthError(error: unknown): Error {
+  if (!isModelAuthError(error)) {
+    return error instanceof Error ? error : new Error(String(error));
+  }
+
+  return new Error(
+    "Fallo de autenticacion con el modelo (OpenRouter). Verifica OPENROUTER_API_KEY en .env.local, confirma que la clave este activa en OpenRouter y vuelve a ejecutar.",
+  );
+}
+
 function normalizeOutput(rawOutput: unknown): string {
   if (typeof rawOutput === "string") {
     return rawOutput;
@@ -59,7 +77,12 @@ export async function runAgent(input: string, options: RunAgentOptions = {}): Pr
       verbose: options.verbose ?? env.AGENT_VERBOSE,
       maxIterations: env.AGENT_MAX_ITERATIONS,
     }));
-  const result = await executor.invoke({ input: normalizedInput });
+  let result: AgentResult;
+  try {
+    result = await executor.invoke({ input: normalizedInput });
+  } catch (error) {
+    throw mapModelAuthError(error);
+  }
   const output = normalizeOutput(result.output);
   return sanitizeOutput(output);
 }

@@ -67,4 +67,16 @@ describe("runAgent", () => {
 
     expect(output).toBe("Paso 1\nPaso 2");
   });
+
+  it("mapea errores de autenticacion del modelo con mensaje accionable", async () => {
+    process.env.OPENROUTER_API_KEY = "test-key";
+
+    await expect(
+      runAgent("Analiza src/index.ts", {
+        executor: {
+          invoke: vi.fn().mockRejectedValue(new Error("401 User not found. MODEL_AUTHENTICATION")),
+        },
+      }),
+    ).rejects.toThrow("Fallo de autenticacion con el modelo (OpenRouter)");
+  });
 });

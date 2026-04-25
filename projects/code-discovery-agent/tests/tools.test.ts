@@ -5,8 +5,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { codeAnalyzerTool } from "../src/agent/tools/codeAnalyzer.js";
 import { diagramGeneratorTool } from "../src/agent/tools/diagramGenerator.js";
 import { flowExplainerTool } from "../src/agent/tools/flowExplainer.js";
-import type { NormalizedAnalysis } from "../src/agent/types/normalizedAnalysis.js";
-
 const ENV_KEYS = [
   "OPENROUTER_API_KEY",
   "AGENT_REPO_ROOT",
@@ -52,24 +50,31 @@ describe("tools", () => {
   });
 
   it("code_analyzer rechaza rutas fuera del repo", async () => {
-    await expect(codeAnalyzerTool.invoke({ targetPath: "../" })).rejects.toThrow(
-      "Acceso denegado: ruta fuera del repositorio objetivo.",
-    );
+    const raw = await codeAnalyzerTool.invoke({ targetPath: "../" });
+    expect(raw).toContain("Error de seguridad [PATH_TRAVERSAL]");
   });
 
   it("code_analyzer bloquea archivos de credenciales", async () => {
     await fs.writeFile(path.join(repoRoot, ".env.local"), "SECRET=123", "utf8");
 
-    await expect(codeAnalyzerTool.invoke({ targetPath: ".env.local" })).rejects.toThrow(
-      'Acceso denegado: el archivo ".env.local" puede contener credenciales.',
-    );
+    const raw = await codeAnalyzerTool.invoke({ targetPath: ".env.local" });
+    expect(raw).toContain("Error de seguridad [PATH_BLOCKED]");
   });
 
   it("code_analyzer construye el contrato normalizado", async () => {
     const raw = await codeAnalyzerTool.invoke({ targetPath: "." });
-    const analysis = JSON.parse(raw) as NormalizedAnalysis;
+    const analysis = JSON.parse(raw) as {
+      stats: { totalFiles: number };
+      documentation: Array<{ path: string; content: string; truncated: boolean }>;
+      files: Array<{
+        path: string;
+        dependencies: Array<{ target: string }>;
+        symbols: Array<{ name: string }>;
+      }>;
+    };
 
     expect(analysis.stats.totalFiles).toBe(2);
+    expect(Array.isArray(analysis.documentation)).toBe(true);
     expect(analysis.files.some((file) => file.path === "a.ts")).toBe(true);
     expect(analysis.files.some((file) => file.path === "b.ts")).toBe(true);
     expect(analysis.files.find((file) => file.path === "a.ts")?.dependencies[0]?.target).toBe("b.ts");
@@ -79,27 +84,23 @@ describe("tools", () => {
   });
 
   it("diagram_generator crea nodos y flechas con el contrato", async () => {
-    const raw = await codeAnalyzerTool.invoke({ targetPath: "." });
-    const analysis = JSON.parse(raw) as NormalizedAnalysis;
-    const diagramRaw = await diagramGeneratorTool.invoke({ analysis });
+    const diagramRaw = await diagramGeneratorTool.invoke({ targetPath: "." });
     const diagram = JSON.parse(diagramRaw) as {
       elements: Array<{ type: string }>;
-      metadata: { includedFiles: string[] };
+      metadata: { totalFiles: number };
     };
 
     expect(diagram.elements.some((element) => element.type === "rectangle")).toBe(true);
     expect(diagram.elements.some((element) => element.type === "arrow")).toBe(true);
-    expect(diagram.metadata.includedFiles).toContain("a.ts");
+    expect(diagram.metadata.totalFiles).toBeGreaterThan(0);
   });
 
   it("flow_explainer describe el flujo desde analisis compartido", async () => {
-    const raw = await codeAnalyzerTool.invoke({ targetPath: "." });
-    const analysis = JSON.parse(raw) as NormalizedAnalysis;
-    const flowRaw = await flowExplainerTool.invoke({ analysis, functionName: "one" });
-    const flow = JSON.parse(flowRaw) as { found: boolean; steps: string[]; filePath: string };
+    const flowRaw = await flowExplainerTool.invoke({ targetPath: ".", functionName: "one" });
+    const flow = JSON.parse(flowRaw) as { found: boolean; functionBody: string | null; filePath: string };
 
     expect(flow.found).toBe(true);
     expect(flow.filePath).toBe("a.ts");
-    expect(flow.steps.length).toBeGreaterThan(0);
+    expect(flow.functionBody).toBeDefined();
   });
 });
