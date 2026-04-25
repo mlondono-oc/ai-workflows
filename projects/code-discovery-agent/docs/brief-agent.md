@@ -36,8 +36,9 @@ El objetivo de este brief es alinear al equipo en una visión compartida: constr
 
 - El proyecto está construido con **TypeScript sobre Node.js moderno**.
 - Usa **LangChain** para componer el agente y orquestar el análisis de código.
-- Se conecta a **OpenRouter** para acceder al modelo de lenguaje.
-- Utiliza **Excalidraw** para generar diagramas visuales.
+- Se conecta a **OpenRouter** para acceder al modelo de lenguaje (actualmente `anthropic/claude-sonnet-4.5`).
+- Usa **Mermaid** para generar diagramas de secuencia como artefactos `.md` y `.html` auto-renderizados.
+- Usa **Excalidraw** para diagramas de módulos generados automáticamente.
 - Usa **validación de configuración** para asegurar que el entorno esté completo antes de ejecutar.
 - Cuenta con **pruebas automatizadas** y validaciones de calidad para mantener estabilidad.
 
@@ -50,7 +51,7 @@ La solución está dividida en capas claras para que cada parte tenga una respon
 | **Entrada** | Recibe código, preguntas o rutas de repositorio del usuario |
 | **Ejecución** | Coordina el proceso de análisis y generación de diagramas |
 | **Composición** | Arma el agente con modelo, prompts y herramientas específicas |
-| **Capacidades del Agente** | Concentra las herramientas del dominio (análisis de código y generación de diagramas) |
+| **Capacidades del Agente** | `code_analyzer` (análisis + docs embebidos), `file_reader` (lectura directa de archivos y funciones), `flow_explainer` (flujo de una función), `diagram_generator` (artefactos Mermaid o Excalidraw) |
 | **Configuración** | Centraliza y valida variables de entorno y credenciales |
 
 Este enfoque permite:
@@ -76,14 +77,14 @@ El sistema espera consultas escritas en lenguaje natural por parte del usuario o
 - Detección y corrección automática de bugs.
 - Generación de código de nuevas funcionalidades.
 
-**Resultado esperado para el usuario (estructura mínima):**
+**Resultado esperado para el usuario (formato adaptativo según el tipo de consulta):**
 
-- Respuesta en español con explicación clara.
-- Resumen breve del alcance analizado (qué sí y qué no se evaluó).
-- Explicación del flujo en pasos ordenados.
-- Diagrama visual generado en Excalidraw (o exportable).
-- Explicación breve de cómo el agente llegó a sus conclusiones.
-- Uso de herramientas solo cuando realmente aporta valor.
+- Respuesta en español con explicación clara basada en código real leido.
+- **Proyecto completo:** qué es (desde la documentación del proyecto), estructura de componentes, flujo principal con funciones y archivos reales.
+- **Módulo o carpeta:** propósito del módulo, archivos clave con descripción, relaciones entre archivos.
+- **Función específica:** propósito, firma, lógica interna con fragmentos de código real, llamadas que hace.
+- **Flujo end-to-end:** punto de entrada, cadena de llamadas, diagrama de secuencia.
+- Diagrama Mermaid de secuencia persistido como `.md` y `.html` (renderizable en cualquier navegador sin extensiones).
 
 ---
 
@@ -106,12 +107,13 @@ El sistema espera consultas escritas en lenguaje natural por parte del usuario o
 
 El trabajo se considera terminado cuando:
 
-- **Funcionalidad básica operativa**: el agente puede analizar código y generar diagramas en Excalidraw.
-- **Casos de uso del MVP cubiertos**: al menos se soportan correctamente estos tres casos: (1) análisis de archivo/directorio, (2) diagrama de arquitectura de módulo y (3) explicación de flujo de una función.
-- **Diagramas claros y útiles**: cada diagrama identifica componentes principales y relaciones entre ellos de forma legible para nuevos miembros del equipo.
+- **Funcionalidad básica operativa**: el agente puede analizar código y generar diagramas Mermaid de secuencia.
+- **Casos de uso del MVP cubiertos**: al menos se soportan correctamente estos cuatro casos: (1) análisis de archivo/directorio, (2) diagrama de secuencia del flujo principal, (3) explicación de módulo o carpeta, y (4) explicación del flujo de una función específica.
+- **Contexto del proyecto desde la documentación**: cuando el proyecto tiene un `brief`, `spec`, `README` u otro `.md`, el agente usa esos documentos para describir el propósito real del sistema — no infiere el propósito del código scaffold.
+- **Diagramas claros y útiles**: cada diagrama generado es un `sequenceDiagram` Mermaid que muestra flujo real, disponible como `.md` y como `.html` auto-renderizado.
 - **Explicaciones en español**: todas las respuestas y análisis están en español con lenguaje accesible.
-- **Formato de salida consistente**: toda respuesta del agente incluye resumen, alcance, flujo paso a paso y diagrama.
-- **Pruebas automatizadas**: existen tests que cubren funcionalidades principales del MVP y errores de configuración (variables faltantes, credenciales inválidas o entrada no soportada).
-- **Documentación completa**: el README y comentarios explican cómo usar, configurar y extender el agente, incluyendo limitaciones del MVP.
-- **Brief actualizado**: este documento refleja con precisión el estado actual del proyecto y su dirección inmediata.
-- **Criterios de calidad definidos**: queda claro cómo evaluar calidad mínima en cada cambio futuro (ejecución correcta, pruebas, consistencia y documentación).
+- **Formato de salida adaptativo**: el formato varía según el tipo de consulta (proyecto, módulo, función, flujo).
+- **Pruebas automatizadas**: existen tests que cubren funcionalidades principales del MVP, el campo `documentation` en `NormalizedAnalysis`, y errores de configuración.
+- **Documentación completa**: el README y los docs de `docs/` explican cómo usar, configurar y extender el agente.
+- **Brief actualizado**: este documento refleja con precisión el estado actual del proyecto.
+- **Criterios de calidad definidos**: queda claro cómo evaluar calidad mínima en cada cambio futuro.
